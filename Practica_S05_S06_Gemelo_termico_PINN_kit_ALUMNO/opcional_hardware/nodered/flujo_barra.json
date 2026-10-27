@@ -1,0 +1,12 @@
+[
+ {"id":"mqtt_in","type":"mqtt in","z":"barra","name":"lab/barra/+/temp","topic":"lab/barra/+/temp","qos":"0","datatype":"json","broker":"broker","x":140,"y":100,"wires":[["fn_split"]]},
+ {"id":"fn_split","type":"function","z":"barra","name":"un punto por sensor","func":"const pareja = msg.topic.split('/')[2];\nconst x_cm = [3, 9, 15, 21, 27];\nconst out = msg.payload.T.map((T, i) => ({\n  measurement: 'barra',\n  tags: { pareja, sensor: 'S' + (i + 1), x_cm: x_cm[i] },\n  fields: { T, t_s: msg.payload.t_s === null ? -1 : msg.payload.t_s, calef: msg.payload.calef }\n}));\nmsg.payload = out;\nreturn msg;","outputs":1,"x":360,"y":100,"wires":[["influx_out"]]},
+ {"id":"influx_out","type":"influxdb batch","z":"barra","influxdb":"influx","name":"InfluxDB lab","precision":"","retentionPolicy":"","x":580,"y":100,"wires":[]},
+ {"id":"mqtt_gemelo","type":"mqtt in","z":"barra","name":"lab/barra/+/gemelo","topic":"lab/barra/+/gemelo","qos":"0","datatype":"json","broker":"broker","x":150,"y":180,"wires":[["fn_gemelo"]]},
+ {"id":"fn_gemelo","type":"function","z":"barra","name":"estado del gemelo","func":"const pareja = msg.topic.split('/')[2];\nmsg.payload = [{ measurement: 'gemelo', tags: { pareja, estado: msg.payload.estado }, fields: { alpha: msg.payload.alpha, h: msg.payload.h, rmse: msg.payload.rmse } }];\nreturn msg;","outputs":1,"x":370,"y":180,"wires":[["influx_out"]]},
+ {"id":"inject_ensayo","type":"inject","z":"barra","name":"lanzar ensayo","props":[{"p":"payload"}],"payload":"ensayo","payloadType":"str","x":150,"y":260,"wires":[["mqtt_cmd"]]},
+ {"id":"mqtt_cmd","type":"mqtt out","z":"barra","name":"lab/barra/p01/cmd","topic":"lab/barra/p01/cmd","qos":"0","retain":"false","broker":"broker","x":370,"y":260,"wires":[]},
+ {"id":"barra","type":"tab","label":"Barra térmica","disabled":false},
+ {"id":"broker","type":"mqtt-broker","name":"Mosquitto lab","broker":"mosquitto","port":"1883","clientid":"","autoConnect":true,"usetls":false,"protocolVersion":"4","keepalive":"60","cleansession":true},
+ {"id":"influx","type":"influxdb","hostname":"influxdb","port":"8086","protocol":"http","database":"lab","name":"InfluxDB lab","usetls":false,"influxdbVersion":"1.x"}
+]

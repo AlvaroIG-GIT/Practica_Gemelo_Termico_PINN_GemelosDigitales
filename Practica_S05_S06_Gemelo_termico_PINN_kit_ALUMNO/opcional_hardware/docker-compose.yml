@@ -1,0 +1,22 @@
+# Pila del laboratorio (misma que la práctica de Helsinki): broker MQTT, Node-RED, InfluxDB 1.x y Grafana
+services:
+  mosquitto:
+    image: eclipse-mosquitto:2
+    ports: ["1883:1883"]
+    command: sh -c "printf 'listener 1883\nallow_anonymous true\n' > /mosquitto/config/mosquitto.conf && mosquitto -c /mosquitto/config/mosquitto.conf"
+  influxdb:
+    image: influxdb:1.8
+    ports: ["8086:8086"]
+    environment: { INFLUXDB_DB: lab }
+    volumes: [influx:/var/lib/influxdb]
+  nodered:
+    image: nodered/node-red:latest
+    ports: ["1880:1880"]
+    volumes: [nodered:/data]
+    depends_on: [mosquitto, influxdb]
+  grafana:
+    image: grafana/grafana:latest
+    ports: ["3000:3000"]
+    environment: { GF_SECURITY_ADMIN_PASSWORD: lab }
+    volumes: [grafana:/var/lib/grafana]
+volumes: { influx: {}, nodered: {}, grafana: {} }
